@@ -83,17 +83,21 @@ class N1QLQuery(bucket: CouchbaseBucket, query: String, host: String, port: Stri
    */
   def toJsArray(implicit ec: ExecutionContext): Future[JsArray] = {
     val result = Promise[JsValue]()
-    bucket.httpClient.preparePost(url).addQueryParameter("q", query).execute(new AsyncCompletionHandler[Response]() {
-      override def onCompleted(response: Response) = {
-        result.success(Json.parse(response.getResponseBody))
-        response
-      }
-      override def onThrowable(t: Throwable) = {
-        result.failure(t)
-      }
-    })
+    bucket.httpClient
+      .preparePost(url)
+      .setBody(Json.obj("statement" -> query).toString())
+      .setHeader("Content-Type", "application/json")
+      .execute(new AsyncCompletionHandler[Response]() {
+        override def onCompleted(response: Response) = {
+          result.success(Json.parse(response.getResponseBody))
+          response
+        }
+        override def onThrowable(t: Throwable) = {
+          result.failure(t)
+        }
+      })
     result.future.map { response =>
-      (response \ "resultset").as[JsArray]
+      (response \ "results").as[JsArray]
     }
   }
 
