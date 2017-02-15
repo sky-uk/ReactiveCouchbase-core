@@ -3,32 +3,53 @@ import Keys._
 
 object ApplicationBuild extends Build {
 
-  val appName         = "ReactiveCouchbase-core"
-  val appVersion      = "0.5-SNAPSHOT"
+  val appName = "ReactiveCouchbase-core"
+  val appVersion = sys.props.getOrElse("APP_VERSION", default = "1.0-SNAPSHOT")
   val appScalaVersion = "2.11.7"
-  //val appScalaBinaryVersion = "2.10"
   val appScalaCrossVersions = Seq("2.11.1", "2.10.4")
+
+  val nexusHost = sys.props.getOrElse("NEXUS_URL", default = "")
+  val nexusRepository = sys.props.getOrElse("NEXUS_REPOSITORY", default = "releases")
 
   val local: Def.Initialize[Option[sbt.Resolver]] = version { (version: String) =>
     val localPublishRepo = "./repository"
-    if(version.trim.endsWith("SNAPSHOT"))
+    if (version.trim.endsWith("SNAPSHOT"))
       Some(Resolver.file("snapshots", new File(localPublishRepo + "/snapshots")))
     else Some(Resolver.file("releases", new File(localPublishRepo + "/releases")))
   }
 
-  val nexusPublish = version { v =>
-    val nexus = "https://oss.sonatype.org/"
-    if (v.trim.endsWith("SNAPSHOT"))
-      Some("snapshots" at nexus + "content/repositories/snapshots")
-    else
-      Some("releases"  at nexus + "service/local/staging/deploy/maven2")
-  }
-
   lazy val baseSettings = Defaults.defaultSettings ++ Seq(
     scalaVersion := appScalaVersion,
-    //scalaBinaryVersion := appScalaBinaryVersion,
     crossScalaVersions := appScalaCrossVersions,
     parallelExecution in Test := false
+  )
+
+  lazy val publishSettings = Seq(
+    credentials += Credentials(
+      "Sonatype Nexus Repository Manager",
+      nexusHost,
+      sys.props.getOrElse("NEXUS_USER", default = ""),
+      sys.props.getOrElse("NEXUS_PASSWORD", default = "")
+    ),
+
+    publishMavenStyle := true,
+
+    crossPaths := true,
+
+    publish <<= publish.dependsOn(publish in config("universal")),
+
+    publishTo := {
+      val nexusFull = s"http://$nexusHost/nexus/content/repositories"
+
+      if (isSnapshot.value) {
+        throw new RuntimeException("Snapshots not allowed")
+      }
+      else {
+        Some("releases" at s"$nexusFull/$nexusRepository")
+      }
+    },
+
+    pomIncludeRepository := { _ => false }
   )
 
   lazy val root = Project("root", base = file("."))
@@ -37,11 +58,12 @@ object ApplicationBuild extends Build {
       publishLocal := {},
       publish := {}
     ).aggregate(
-      driver
-    )
+    driver
+  )
 
   lazy val driver = Project(appName, base = file("driver"))
     .settings(baseSettings: _*)
+    .settings(publishSettings: _*)
     .settings(
       resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
       libraryDependencies += "com.couchbase.client" % "couchbase-client" % "1.4.11",
@@ -55,10 +77,7 @@ object ApplicationBuild extends Build {
       libraryDependencies += "com.codahale.metrics" % "metrics-core" % "3.0.1",
       organization := "org.reactivecouchbase",
       version := appVersion,
-      publishTo <<= local,
-      publishMavenStyle := true,
       publishArtifact in Test := false,
-      pomIncludeRepository := { _ => false },
       pomExtra := (
         <url>http://reactivecouchbase.org</url>
           <licenses>
