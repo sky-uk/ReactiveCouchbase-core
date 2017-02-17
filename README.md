@@ -1,8 +1,6 @@
 Reactive Couchbase
 =======================================
 
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ReactiveCouchbase/ReactiveCouchbase-core?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 Contents
 --------
 
@@ -31,6 +29,17 @@ The binary is here :
 * https://github.com/ReactiveCouchbase/repository/raw/master/starterkits/reactivecouchbase-starter-kit.zip
 
 Just download the zip file, unzip it, change the app name/version in the `build.sbt` file and you're ready to go.
+
+Project Setup
+============
+
+To run the tests:
+
+    sbt reload clean compile test
+
+To publish the artifact to Nexus:
+
+    sbt reload clean compile publish -DAPP_VERSION=<VERSION> -DNEXUS_URL=<NEXUS_URL> -DNEXUS_REPOSITORY=<NEXUS_REPOSITORY> -DNEXUS_USER=<NEXUS_USER> -DNEXUS_PASSWORD=<NEXUS_PASSWORD>
 
 Basic Usage
 ============
