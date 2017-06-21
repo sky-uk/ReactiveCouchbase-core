@@ -11,33 +11,17 @@ Contents
 - [ReactiveCouchbase event store](#reactivecouchbase-event-store)
 - [ReactiveCouchbase configuration cheatsheet](#reactivecouchbase-configuration-cheatsheet)
 
-Current version
-============
-
-* current dev version is 0.1-SNAPSHOT
-  * https://raw.github.com/ReactiveCouchbase/repository/master/snapshots
-
-Starter Kits
-=============
-
-You can quickly bootstrap a project with the starter kit :
-
-https://github.com/ReactiveCouchbase/reactivecouchbase-starter-kit
-
-The binary is here :
-
-* https://github.com/ReactiveCouchbase/repository/raw/master/starterkits/reactivecouchbase-starter-kit.zip
-
-Just download the zip file, unzip it, change the app name/version in the `build.sbt` file and you're ready to go.
-
 Project Setup
 ============
 
 To run the tests:
 
+* Start Couchbase locally with a bucket named `default`, then run:
+
+
     sbt reload clean compile test
 
-To publish the artifact to Nexus:
+To build and publish the artifact to Nexus:
 
     sbt reload clean compile publish -DAPP_VERSION=<VERSION> -DNEXUS_URL=<NEXUS_URL> -DNEXUS_REPOSITORY=<NEXUS_REPOSITORY> -DNEXUS_USER=<NEXUS_USER> -DNEXUS_PASSWORD=<NEXUS_PASSWORD>
 
@@ -47,7 +31,7 @@ Basic Usage
 Project configuration
 ---------------------
 
-in your `build.sbt` file add dependencies and resolvers like :
+in your `build.sbt` file add dependencies and resolvers like:
 
 ```scala
 
