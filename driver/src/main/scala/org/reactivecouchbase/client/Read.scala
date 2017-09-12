@@ -1,12 +1,14 @@
 package org.reactivecouchbase.client
 
-import org.reactivecouchbase.CouchbaseBucket
-import scala.concurrent.{Future, ExecutionContext}
-import org.reactivecouchbase.client.CouchbaseFutures._
 import net.spy.memcached.transcoders.Transcoder
-import play.api.libs.iteratee.{Enumeratee, Iteratee, Enumerator}
+import org.reactivecouchbase.CouchbaseBucket
+import org.reactivecouchbase.CouchbaseExpiration.CouchbaseExpirationTiming
+import org.reactivecouchbase.client.CouchbaseFutures._
+import play.api.libs.iteratee.{Enumeratee, Enumerator, Iteratee}
 import play.api.libs.json._
-import collection.JavaConversions._
+
+import scala.collection.JavaConversions._
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * Trait for read operations
@@ -146,6 +148,31 @@ trait Read {
    */
   def get[T](key: String)(implicit bucket: CouchbaseBucket, r: Reads[T], ec: ExecutionContext): Future[Option[T]] = {
     waitForGet( bucket.couchbaseClient.asyncGet(key), bucket, ec ) map {
+      case doc: String => Some(r.reads(Json.parse(doc)))
+      case null => None
+      case _ if bucket.failWithNonStringDoc => throw new IllegalStateException(s"Document '$key' is not a string ...")
+      case _ if !bucket.failWithNonStringDoc => None
+    } map {
+      case Some(JsSuccess(value, _)) => Some(value)
+      case Some(JsError(errors)) if bucket.jsonStrictValidation => throw new JsonValidationException("Invalid JSON content", JsError.toFlatJson(errors))
+      case None => None
+    }
+  }
+
+  /**
+    *
+    * Fetch a optional document and set its expiry
+    *
+    * @param key the key of the document
+    * @param exp expiration of the doc
+    * @param bucket the bucket to use
+    * @param r Json reader
+    * @param ec ExecutionContext for async processing
+    * @tparam T type of the doc
+    * @return
+    */
+  def getAndTouch[T](key: String, exp: CouchbaseExpirationTiming)(implicit bucket: CouchbaseBucket, r: Reads[T], ec: ExecutionContext): Future[Option[T]] = {
+    Future( bucket.couchbaseClient.asyncGetAndTouch(key, exp).get().getValue ) map {
       case doc: String => Some(r.reads(Json.parse(doc)))
       case null => None
       case _ if bucket.failWithNonStringDoc => throw new IllegalStateException(s"Document '$key' is not a string ...")
