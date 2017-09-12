@@ -21,6 +21,10 @@ To run the tests:
 
     sbt reload clean compile test
 
+To build and publish the artifact to local Maven m2:
+
+    sbt reload clean compile publishM2
+
 To build and publish the artifact to Nexus:
 
     sbt reload clean compile publish -DAPP_VERSION=<VERSION> -DNEXUS_URL=<NEXUS_URL> -DNEXUS_REPOSITORY=<NEXUS_REPOSITORY> -DNEXUS_USER=<NEXUS_USER> -DNEXUS_PASSWORD=<NEXUS_PASSWORD>
