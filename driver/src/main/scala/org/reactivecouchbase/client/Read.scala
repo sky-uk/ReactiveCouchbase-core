@@ -137,7 +137,7 @@ trait Read {
 
   /**
    *
-   * Fetch a optional document
+   * Fetch an optional document
    *
    * @param key the key of the document
    * @param bucket the bucket to use
@@ -154,14 +154,14 @@ trait Read {
       case _ if !bucket.failWithNonStringDoc => None
     } map {
       case Some(JsSuccess(value, _)) => Some(value)
-      case Some(JsError(errors)) if bucket.jsonStrictValidation => throw new JsonValidationException("Invalid JSON content", JsError.toFlatJson(errors))
+      case Some(JsError(errors)) if bucket.jsonStrictValidation => throw new JsonValidationException("Invalid JSON content", JsError.toJson(errors))
       case None => None
     }
   }
 
   /**
     *
-    * Fetch a optional document and set its expiry
+    * Fetch an optional document and set its expiry
     *
     * @param key the key of the document
     * @param exp expiration of the doc
@@ -179,7 +179,7 @@ trait Read {
       case _ if !bucket.failWithNonStringDoc => None
     } map {
       case Some(JsSuccess(value, _)) => Some(value)
-      case Some(JsError(errors)) if bucket.jsonStrictValidation => throw new JsonValidationException("Invalid JSON content", JsError.toFlatJson(errors))
+      case Some(JsError(errors)) if bucket.jsonStrictValidation => throw new JsonValidationException("Invalid JSON content", JsError.toJson(errors))
       case None => None
     }
   }
