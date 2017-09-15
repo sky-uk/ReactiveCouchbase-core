@@ -367,6 +367,20 @@ trait BucketAPI {
   }
 
   /**
+    *
+    * fetch a document and set its expiry
+    *
+    * @param key the key of the document
+    * @param exp expiration of the doc
+    * @param ec ExecutionContext for async processing
+    * @tparam T type of the doc
+    * @return
+    */
+  def getAndTouch[T](key: String, exp: CouchbaseExpirationTiming)(implicit r: Reads[T], ec: ExecutionContext): Future[Option[T]] = {
+    Couchbase.getAndTouch[T](key, exp)(self, r, ec)
+  }
+
+  /**
    *
    *
    *
