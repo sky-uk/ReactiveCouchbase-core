@@ -9,6 +9,7 @@ import play.api.libs.json._
 
 import scala.collection.JavaConversions._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 /**
  * Trait for read operations
@@ -172,7 +173,12 @@ trait Read {
     * @return
     */
   def getAndTouch[T](key: String, exp: CouchbaseExpirationTiming)(implicit bucket: CouchbaseBucket, r: Reads[T], ec: ExecutionContext): Future[Option[T]] = {
-    Future( bucket.couchbaseClient.asyncGetAndTouch(key, exp).get().getValue ) map {
+    Future {
+      Try(bucket.couchbaseClient.asyncGetAndTouch(key, exp).get().getValue) match {
+        case Success(s) => s
+        case Failure(_) => None
+      }
+    } map {
       case doc: String => Some(r.reads(Json.parse(doc)))
       case null => None
       case _ if bucket.failWithNonStringDoc => throw new IllegalStateException(s"Document '$key' is not a string ...")
